@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html>
+    
+    
+<body>
+    <canvas width = "400" height="400" id="canvas"></canvas> 
+   
+  <br>
+  Co-ordinates of bottom left corner  <br>             
+  <input id="xmin" type="number" value = 100 min = 10 max=300>    
+  <input id="ymin" type="number" value = 100 min = 10 max=300>
+  <br>
+   Co-ordinates of upper right  corner   <br>
+  <input id="xmax" type="number" value = 300 min = 50 max=300>    
+  <input id="ymax" type="number" value = 300 min = 50 max=300>  
+  <br>
+ 
+  <button id="experiment">Experiment</button>
+    
+    <script>
+   
+    
+     var lineCordinates = function(start,end){
+         this.x1 = start[0];
+         this.x2 = end[0];
+         this.y1 = start[1];
+         this.y2 = end[1];
+         console.log(start + "   "+end);
+         this.drawLine = function(context,strokecolor){
+             context.beginPath();
+			 context.moveTo(this.x1,this.y1);
+			 context.lineTo(this.x2,this.y2);
+             context.strokeStyle = strokecolor;
+			 context.stroke();
+             //console.log('clipwindow:drawLine  Successful: cordinates :'+ lineCordinates.y1 )
+         }
+         this.drawWindow = function(context){
+             context.beginPath();
+			 context.moveTo(this.x1,0);
+			 context.lineTo(this.x1,400);
+			 context.stroke();
+             
+             context.beginPath();
+			 context.moveTo(this.x2,0);
+			 context.lineTo(this.x2,400);
+			 context.stroke();
+             
+             context.beginPath();
+			 context.moveTo(0,this.y1);
+			 context.lineTo(400,this.y1);
+			 context.stroke();
+             
+             context.beginPath();
+			 context.moveTo(0,this.y2);
+			 context.lineTo(400,this.y2);
+			 context.stroke();
+            
+         }
+      };
+         
+    
+     var clipwindow = function(){
+         
+         this.windowCordinates = null;
+         this.canvas = null;
+         this.context = null;
+         this.initialize = function(){
+             if(document.getElementById("xmin") == null) 
+                 console.log("null null");  
+             document.getElementById("xmin").value = 100;
+             document.getElementById("ymin").value = 100;
+             document.getElementById("xmax").value = 300;
+             document.getElementById("ymax").value = 300;
+             this.windowCordinates = new lineCordinates([document.getElementById("xmin").value,document.getElementById("ymin").value],[document.getElementById("xmax").value, document.getElementById("ymax").value]);
+             this.canvas = canvas.getContext("2d");
+             this.context = canvas.getContext("2d");
+             this.context.globalCompositeOperation = 'source-over';  
+         }
+         this.prepare = function(){
+              
+         if(document.getElementById("xmin").checkValidity() && document.getElementById("ymin").checkValidity() && document.getElementById("xmax").checkValidity() && document.getElementById("ymax").checkValidity()) 
+                {
+                 if(document.getElementById("xmin").value <= document.getElementById("xmax") && document.getElementById("ymin").value <= document.getElementById("ymax"))
+                  {
+                     console.log("i'm in initialize");  
+                     
+                     console.log('clipwindow:initialize  Successful')  ;
+                  }
+                }
+         }
+         this.drawCanvas = function(){
+             this.context.fillStyle = "#dcb39c";
+             this.context.translate(0, canvas.height);
+             this.context.scale(1, -1);
+             this.context.fillRect(0, 0, 400, 400);
+             this.windowCordinates.drawWindow(this.context);
+             this.context.fillStyle = "black";
+             this.context.font = "11px Comic Sans MS";
+             this.context.fillText("("+this.windowCordinates.x1+","+this.windowCordinates.y1+")",this.windowCordinates.x1,this.windowCordinates.y1);
+             this.context.fillText("("+this.windowCordinates.x2+","+this.windowCordinates.y2+")",this.windowCordinates.x2,this.windowCordinates.y2);
+             this.context.fillText("("+this.windowCordinates.x1+","+this.windowCordinates.y2+")",this.windowCordinates.x1,this.windowCordinates.y2);
+             this.context.fillText("("+this.windowCordinates.x2+","+this.windowCordinates.y1+")",this.windowCordinates.x2,this.windowCordinates.y1);
+             
+         }
+         
+         
+         
+          
+       
+     };
+        
+        var Experiment = function(context,windowCoordinates,start,end){
+            
+             this.experimentline = null;
+             
+             this.startOpcode = null;
+             this.endOpcode = null;
+             this.resultstart = start;
+             this.resultend = end;
+             this.windoregion = {
+                 YMAX_REGION : 0,
+                 YMIN_REGION : 1,
+                 XMAX_REGION : 2,
+                 XMIN_REGION : 3
+            }
+             this.slope = 0;
+             this.sconst = 0;
+             this.intersections_list = [];
+             //this.intersect = [];
+            // this.point = [];
+             this.end = [];  
+             this.intersectend = [];
+            
+            this.set_outcode =function(point)
+			{
+				outcode = '';
+
+				x = point[0];
+				y = point[1];
+
+				if(y > windowCoordinates.y2)
+					outcode = outcode + '1';
+				else
+					outcode = outcode + '0';
+
+				if(y < windowCoordinates.y1)
+					outcode = outcode + '1';
+				else
+					outcode = outcode + '0';
+
+				if(x > windowCoordinates.x2)
+					outcode = outcode + '1';
+				else
+					outcode = outcode + '0';
+
+				if(x < windowCoordinates.x1)
+					outcode = outcode + '1';
+				else
+					outcode = outcode + '0';
+
+				return outcode;
+			}
+            this.clippingRequired=function(){
+                if(this.startOpcode == '0000' && this.endOpcode == '0000' )
+                   {
+                    experimentline.drawLine(context,"#38c429");
+                    return false;
+                   }
+                else if(((parseInt(this.startOpcode, 2) | parseInt(this.endOpcode,2)) != 15 ) &(parseInt(this.startOpcode, 2) & parseInt(this.endOpcode,2)) !=0 )
+                    {
+                        experimentline.drawLine(context,"#9b6e4b");
+                         
+                        return false;
+                    }
+                else
+                    return true;
+                
+            }
+            this.dolineclipping = function(inpoint,pointopcode){
+                
+                var intersectcord = [];
+                var point = inpoint;
+                while(parseInt(pointopcode,2) != 0)
+                    {
+                       
+                         if(pointopcode.charAt(0) == '1')
+                               {
+                                console.log(parseInt(pointopcode,2));   
+                                intersectcord[0] = (windowCoordinates.y2 - this.sconst)/this.slope;
+					            intersectcord[1] = windowCoordinates.y2;
+                                this.intersections_list.push([intersectcord,point]);
+                                
+                                
+                                point = intersectcord;
+                                console.log("ymax");
+                                pointopcode = this.set_outcode(point);   
+                               }
+                         if(pointopcode.charAt(1) == '1')
+                             {
+                                intersectcord[0] = (windowCoordinates.y1 - this.sconst)/this.slope;
+					            intersectcord[1] = windowCoordinates.y1;
+                                this.intersections_list.push([intersectcord,point]);
+                                
+                                point = intersectcord;
+                                 console.log("ymin");
+                                pointopcode = this.set_outcode(point);  
+                             }
+                        if(pointopcode.charAt(2) == '1')
+                            {
+                                intersectcord[0] = windowCoordinates.x2;
+					           intersectcord[1] = (this.slope * windowCoordinates.x2 + this.sconst);
+                                this.intersections_list.push([intersectcord,point]);
+                                
+                                point = intersectcord;
+                                console.log("xmax");
+                                pointopcode = this.set_outcode(point); 
+                            }
+                        if(pointopcode.charAt(3) == '1')
+                            {
+                                intersectcord[0] = windowCoordinates.x1;
+					            intersectcord[1] = (this.slope * windowCoordinates.x1 + this.sconst);
+                                this.intersections_list.push([intersectcord,point]);
+                               
+                                point = intersectcord;
+                                console.log("xmin");
+                                pointopcode = this.set_outcode(point); 
+                            }
+                        
+                    }
+                            
+                      return  point;
+                              
+            }
+            
+            this.startExperiment = function(){
+                this.startOpcode = this.set_outcode(start);
+                this.endOpcode = this.set_outcode(end);
+                this.experimentline = new lineCordinates(start,end);
+                this.experimentline.drawLine(context,"#1c0303");
+                this.resultstart = start;
+                this.resultend = end;
+                this.finalline = null;
+                console.log(this.startOpcode);
+                console.log(this.endOpcode);
+                console.log(parseInt(this.startOpcode, 2) & parseInt(this.endOpcode,2) );
+                
+                if(this.clippingRequired())
+                    //find slope
+				    this.slope = (end[1]-start[1])/(end[0]-start[0]);
+
+				   //find constant 'c' by substituting one of the end points for x and y
+				    this.sconst = start[1] - this.slope*start[0];
+                    
+                     console.log("slope :"+ this.slope);
+                    if(this.startOpcode == '0000')
+                        {
+                        this.resultend = this.dolineclipping(end,this.endOpcode);
+                        console.log("this.startOpcode is 0000");    
+                        }
+                    else if(this.endOpcode == '0000')
+                        {
+                        this.resultstart = this.dolineclipping(start,this.startOpcode);
+                        console.log("this.endOpcode is 0000");       
+                        }
+                    else
+                       {
+                           console.log("both are non 0000");  
+                           this.resultstart = this.dolineclipping(start,this.startOpcode);
+                           this.resultend = this.dolineclipping(end,this.endOpcode);
+
+                       }
+                console.log("final coordinates :" +this.resultstart+" + "+this.resultend);
+                this.finalline = new lineCordinates(this.resultstart,this.resultend);
+                this.finalline.drawLine(context,"#38c429");
+         
+                
+            }
+            
+            this.clip = function(region){
+                if(region = this.windoregion.YMAX_REGION)
+                    {
+                        intersect[0] = (windowCoordinates.y2 - this.sconst)/this.slope;
+					    intersect[1] = windowCoordinates.y2;
+
+					    intersections_list.push(intersect);
+                    }
+            }
+            
+            
+        };
+           
+    
+        var objwindow = null;
+        objwindow = new clipwindow();
+        objwindow.initialize();
+        objwindow.drawCanvas();
+        start = [110, 250];
+        end = [350, 40];
+        var objExperiment = new Experiment(objwindow.context,objwindow.windowCordinates,start,end);
+        document.getElementById("experiment").addEventListener("click", function(){
+              objExperiment.startExperiment();
+         });
+       
+       
+    </script>
+ 
+</body>
+</html>

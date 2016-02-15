@@ -18,6 +18,7 @@
           this.clipdatadps = [];
           this.cliplinedps = [];
           this.finalclipdps = [];
+          this.clipdataenddps = [];
           this.initializechart = function (){
               this.chart = new CanvasJS.Chart("chartContainer", {
               axisX:{
@@ -62,13 +63,14 @@
                     },
                     {
                       type: "line",
-                      color: "DarkOrange",
+                      color: "CornflowerBlue",
                       indexLabel: "({x},{y})",
                       indexLabelFontSize: 12,    
                       dataPoints: this.linedps
                     },
                     {
                       type: "line",
+                      color: "DimGray",
                       indexLabel: "({x},{y})",
                       indexLabelFontSize: 12,     
                       dataPoints: this.clipdatadps
@@ -76,9 +78,16 @@
                     {
                       type: "line",
                       indexLabel: "({x},{y})",
-                      color: "ForestGreen", 
+                      color: "FloralWhite", 
                       indexLabelFontSize: 12,     
                       dataPoints: this.finalclipdps
+                    },
+                    {
+                      type: "line",
+                      indexLabel: "({x},{y})",
+                      color: "DimGray", 
+                      indexLabelFontSize: 12,     
+                      dataPoints: this.clipdataenddps
                     }
                    ]
              });     
@@ -86,7 +95,7 @@
       }
        this.drawcanvas= function(){      
             if((this.rowmaxdps.length & this.rowmindps.length & this.colmaxdps.length & this.colmindps.length) !=0)  {
-                console.log('free dps data 1');
+                
                 this.rowmindps.length =0;
                 this.rowmaxdps.length =0;
                 this.colmindps.length =0;
@@ -101,6 +110,7 @@
                 this.clipdatadps.length = 0;
                 this.cliplinedps.length = 0;
                 this.finalclipdps.length = 0;
+                this.clipdataenddps.length = 0;
             
            this.chart.render();     
         }      
@@ -121,13 +131,14 @@
       
       this.updatewindow = function(){
                  console.log('update window');
-                 if(document.getElementById("xmin").value <= document.getElementById("xmax").value && document.getElementById("ymin").value <= document.getElementById("ymax").value)
+                 if(parseInt(document.getElementById("xmin").value) <= parseInt(document.getElementById("xmax").value) && parseInt(document.getElementById("ymin").value) <= parseInt(document.getElementById("ymax").value))
                   {
                       
                       this.xmin = parseInt(document.getElementById("xmin").value);
                       this.xmax = parseInt(document.getElementById("xmax").value);
                       this.ymin = parseInt(document.getElementById("ymin").value);
                       this.ymax = parseInt(document.getElementById("ymax").value);
+                       console.log('update window updated');
                       console.log(this.xmin,this.ymin,this.xmax,this.ymax);
                       this.drawcanvas();
                       //location.reload();
@@ -137,6 +148,14 @@
       }
       
       };
+      var intersectdata = function(start1,end1,type)
+      {
+          this.start = start1.slice();
+          this.end = end1.slice();
+          this.pointtype = type;
+          
+      };
+      
       var Experiment = function(objwindow,start,end){
             
              this.startOpcode = null;
@@ -192,14 +211,16 @@
                     return true;
                 
             }
-            this.addintersectiondata = function(start,end)
+            this.addintersectiondata = function(start,end,region)
             {
-                this.intersections_list.push({x:parseInt(start[0]),y:parseInt(start[1])},{x:parseInt(end[0]),y:parseInt(end[1])});
+                this.intersections_list.push(new intersectdata(start.slice(),end.slice(),region))
+               // this.intersections_list.push([start,end]);
             }
-            this.dolineclipping = function(inpoint,pointopcode){
+            this.dolineclipping = function(inpoint,pointopcode,region){
                 
                 var intersectcord = [];
-                var point = inpoint;
+                var point = [];
+                    point = inpoint;
                // this.intersections_list.push([pointopcode,point]);
                 console.log("first"+this.intersections_list);
                 while(parseInt(pointopcode,2) != 0)
@@ -207,52 +228,55 @@
                        
                          if(pointopcode.charAt(0) == '1')
                                {
-                                console.log(parseInt(pointopcode,2));   
+                                console.log(parseInt(pointopcode,2));
+                                intersectcord.length =0;    
                                 intersectcord[0] = Math.ceil((objwindow.ymax - this.sconst)/this.slope);
 					            intersectcord[1] = objwindow.ymax;
                                 //this.intersections_list.push([{x:parse.int(point[0]),y:point[1]},{x:intersectcord[0],y:intersectcord[1]}]);
-                                this.addintersectiondata(point,intersectcord);
-                                console.log("second"+this.intersections_list);
+                                this.addintersectiondata(point.slice(),intersectcord.slice(),region);
+                                console.log("ymax"+point,intersectcord,region);
                                 
-                                point = intersectcord;
-                                console.log("ymax");
+                                point = intersectcord.slice();
                                 pointopcode = this.set_outcode(point);   
                                }
                          if(pointopcode.charAt(1) == '1')
                              {
+                                intersectcord.length =0;  
                                 intersectcord[0] = Math.ceil((objwindow.ymin - this.sconst)/this.slope);
 					            intersectcord[1] = objwindow.ymin;
-                                this.addintersectiondata(point,intersectcord);
-                                console.log("third"+this.intersections_list);
-                                point = intersectcord;
-                                 console.log("ymin");
+                                this.addintersectiondata(point.slice(),intersectcord.slice(),region);
+                                console.log("ymin"+point,intersectcord);
+                                point = intersectcord.slice();
+                          
                                 pointopcode = this.set_outcode(point);  
                              }
                         if(pointopcode.charAt(2) == '1')
                             {
+                                intersectcord.length =0; 
                                 intersectcord[0] = objwindow.xmax;
 					            intersectcord[1] = Math.ceil((this.slope * objwindow.xmax + this.sconst));
-                                this.addintersectiondata(point,intersectcord);
+                                this.addintersectiondata(point.slice(),intersectcord.slice(),region);
 
-                                console.log("fourth"+this.intersections_list);
-                                point = intersectcord;
-                                console.log("xmax");
+                                console.log("xmax"+point.slice(),intersectcord.slice());
+                                point = intersectcord.slice();
+                               
                                 pointopcode = this.set_outcode(point); 
                             }
                         if(pointopcode.charAt(3) == '1')
                             {
+                                intersectcord.length =0; 
                                 intersectcord[0] = objwindow.xmin;
 					            intersectcord[1] = Math.ceil((this.slope * objwindow.xmin + this.sconst));
-                                this.addintersectiondata(point,intersectcord);
-                                console.log("fifth"+this.intersections_list);
-                                point = intersectcord;
-                                console.log("xmin");
+                                this.addintersectiondata(point.slice(),intersectcord.slice(),region);
+                                console.log("xmin"+point,intersectcord);
+                                point = intersectcord.slice();
+                                
                                 pointopcode = this.set_outcode(point); 
                             }
                         
                     }
                             
-                      return  point;
+                      return  point.slice();
                               
             }
             this.startExperiment = function(){
@@ -275,29 +299,29 @@
                          console.log("slope :"+ this.slope);
                          if(this.startOpcode == '0000')
                           {
-                            this.resultend = this.dolineclipping(end,this.endOpcode);
+                            this.resultend = this.dolineclipping(end,this.endOpcode,"end");
                              objwindow.cliplinedps.length =0;  
-                              objwindow.cliplinedps.push({x:parseInt(start[0]),y:parseInt(start[1])},{x:parseInt(this.resultend[0]),y:parseInt(this.resultend[1])}); console.log("this.startOpcode is 0000");    
+                             objwindow.cliplinedps.push({x:parseInt(start[0]),y:parseInt(start[1])},{x:parseInt(this.resultend[0]),y:parseInt(this.resultend[1])}); console.log("this.startOpcode is 0000");    
+                              
                           }
                           else if(this.endOpcode == '0000')
                           {
-                            this.resultstart = this.dolineclipping(start,this.startOpcode);
+                            this.resultstart = this.dolineclipping(start,this.startOpcode,"start");
                              objwindow.cliplinedps.length =0;    
-                            objwindow.cliplinedps.push({x:parseInt(this.resultstart[0]),y:this.resultstart[1]},{x:parseInt(end[0]),y:parseInt(end[1])});   
+                            objwindow.cliplinedps.push({x:parseInt(this.resultstart[0]),y:parseInt(this.resultstart[1])},{x:parseInt(end[0]),y:parseInt(end[1])});   
                             console.log("this.endOpcode is 0000");       
                           }
                           else
                           {
                             console.log("both are non 0000");  
-                            this.resultstart = this.dolineclipping(start,this.startOpcode);
-                            this.resultend = this.dolineclipping(end,this.endOpcode);
+                            this.resultstart = this.dolineclipping(start.slice(),this.startOpcode,"start");
+                            this.resultend = this.dolineclipping(end.slice(),this.endOpcode,"end");
                             objwindow.cliplinedps.length =0;  
-                            objwindow.cliplinedps.push({x:this.resultstart[0],y:this.resultstart[1]},{x:this.resultend[0],y:this.resultend[1]});  
+                            objwindow.cliplinedps.push({x:parseInt(this.resultstart[0]),y:parseInt(this.resultstart[1])},{x:parseInt(this.resultend[0]),y:parseInt(this.resultend[1])});  
                          }
                     }
              console.log(this.intersections_list);
-            //  objwindow.cliplinedps.push({x:this.resultstart[0],y:this.resultstart[1]},{x:this.resultend[0],y:this.resultend[1]});
-            //  objwindow.chart.render();
+            
             }
       };
       var Iterator = function(items) {
@@ -311,7 +335,7 @@
             return this.items[this.index++];
           },
          this.hasNext= function() {
-            return this.index <= this.items.length;
+            return this.index < this.items.length;
           },
          this.reset= function() {
             this.index = 0;  
@@ -363,7 +387,7 @@
       document.getElementById("experiment").addEventListener("click", function(){
               start = [10, 350];
               end = [350, 10];
-              var objExperiment = new Experiment(objwindow,start,end);
+              var objExperiment = new Experiment(objwindow,start.slice(),end.slice());
               objExperiment.startExperiment();
               document.getElementById("experiment").style.display = "none";
               document.getElementById("previous").style.display = "block";
@@ -374,9 +398,10 @@
               document.getElementById("back").style.display = "block";
               document.getElementById("back").style.display = "inline-block";
               document.getElementById("Enter").style.display = "none"; 
+              if(lineiterator != null)lineiterator = null;
                console.log(objExperiment.intersections_list);
              // lineiterator = new Iterator(objExperiment.intersections_list);
-               if(objExperiment.intersections_list.length > 0)
+               if(objExperiment.intersections_list.length == 0)
                   {
                       objwindow.finalclipdps.length = 0;
                       objwindow.finalclipdps.push(objwindow.cliplinedps.pop());
@@ -384,8 +409,8 @@
                       
                   }
                 else{
-                    if(lineiterator != null)lineiterator = null;
-                    lineiterator = new Iterator(objExperiment.intersections_list);
+                    
+                    lineiterator = new Iterator(objExperiment.intersections_list.slice());
                    }
          });
       
@@ -439,46 +464,89 @@
               document.getElementById("next").style.display = "block";
               document.getElementById("next").style.display = "inline-block";
               document.getElementById("inputinformation").style.display = "none";
-              
-              console.log(objExperiment.intersections_list);
+              if(lineiterator != null)lineiterator = null;
+              console.log("experiment"+objExperiment.intersections_list);
               if(objExperiment.intersections_list.length == 0)
                   {
                       if(objwindow.cliplinedps.length > 0)
                           {
                             objwindow.finalclipdps.length = 0;
-                            objwindow.finalclipdps.push(objwindow.cliplinedps.pop());
+                            objwindow.finalclipdps.push(objwindow.cliplinedps.pop(),objwindow.cliplinedps.pop());
                           }
                       objwindow.chart.render();
                   }
                 else{
-                    if(lineiterator != null)lineiterator = null;
+                    
                     lineiterator = new Iterator(objExperiment.intersections_list);
                    }
               
       });
       document.getElementById("previous").addEventListener("click",function(){
-          if(lineiterator.items != null)
+          if(lineiterator != null)
           {
-            if(objwindow.clipdatadps.length >= 1)  
+            console.log(objwindow.clipdataenddps.length);
+            console.log(objwindow.clipdatadps.length);  
+            if(objwindow.clipdataenddps.length >= 1)  
             {
-                objwindow.clipdatadps.pop();                
-            }
+                objwindow.clipdataenddps.pop();
+                objwindow.clipdataenddps.pop();
+             }
+            else if(objwindow.clipdatadps.length >= 1)
+             {
+                objwindow.clipdatadps.pop();
+                objwindow.clipdatadps.pop();
+             }
              objwindow.chart.render();    
           }
          
       });
       document.getElementById("next").addEventListener("click",function(){
-         if(lineiterator.items != null)
+         if(lineiterator != null)
              {
-              
+                var data = [];
+                var start = [];
+                var end = []; 
+                
+                
+                console.log(lineiterator.index); 
+               
                 if(lineiterator.hasNext())
-                      objwindow.clipdatadps.push(lineiterator.next());
+                    {
+                   
+                      
+                    data = lineiterator.next();
+                    console.log(data);     
+                    start = data.start.slice();
+                    end = data.end.slice();  
+                        
+                    
+                    if(data.pointtype == "start")
+                         objwindow.clipdatadps.push({x:parseInt(start[0]),y:parseInt(start[1])},{x:parseInt(end[0]),y:parseInt(end[1])});    
+                     else
+                         objwindow.clipdataenddps.push({x:parseInt(start[0]),y:parseInt(start[1])},{x:parseInt(end[0]),y:parseInt(end[1])});
+                        
+                     
+                      objwindow.chart.render();       
+                    }
                 else
                      {
+                     
                       objwindow.clipdatadps.length=0;
-                      objwindow.clipdatadps.push(lineiterator.first());
+                      objwindow.clipdataenddps.length = 0;    
+                      data = lineiterator.reset();
+                    
+                      objwindow.finalclipdps.length =0;     
+                      
+                      objwindow.finalclipdps =objwindow.cliplinedps.slice();
+                      
+                         
+                         
+                                
+                      objwindow.chart.render();    
+                          
                      }
-                 objwindow.chart.render();
+                 //console.log("next"+ objwindow.clipdatadps);
+                 
               }
              
                  

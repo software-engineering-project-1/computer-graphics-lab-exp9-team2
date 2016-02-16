@@ -2,358 +2,11 @@
 <html>
 <head>
   <script type="text/javascript" src="canvasjs.min.js"></script>
+  <script type="text/javascript" src="intersectdata.js"></script>
+  <script type="text/javascript" src="clipwindow.js"></script>
+  <script type="text/javascript" src="experimentlab.js"></script>
+  <script type="text/javascript" src="iterator.js"></script>
   <script type="text/javascript">
-      
-      var clipwindow = function(){
-          this.chart =null;
-          this.xmin = 0;
-          this.xmax = 0;
-          this.ymin = 0;
-          this.ymax = 0;
-          this.rowmindps = [];
-          this.rowmaxdps = [];
-          this.colmindps = [];
-          this.colmaxdps = [];
-          this.linedps =[];
-          this.clipdatadps = [];
-          this.cliplinedps = [];
-          this.finalclipdps = [];
-          this.clipdataenddps = [];
-          this.initializechart = function (){
-              this.chart = new CanvasJS.Chart("chartContainer", {
-              axisX:{
-                       minimum: 0,
-                       maximum: 400
-                  
-                     },   
-              axisY:{
-                       minimum: 0,
-                       maximum: 400,
-                       gridThickness : 0
-                    },
-              data:[{
-                      type: "line",
-                      color: "DarkSlateBlue",
-                      indexLabel: "ymin : {y}",
-                      indexLabelOrientation: "vertical",
-                      indexLabelFontSize: 12,
-                      dataPoints: this.rowmindps
-                    },
-                    {
-                      type: "line",
-                      color: "DarkSlateBlue",
-                      indexLabel: "ymax: {y}",
-                      indexLabelOrientation: "vertical",
-                      indexLabelFontSize: 12,    
-                      dataPoints: this.rowmaxdps
-                    },
-                    {
-                      type: "line",
-                      color: "DarkSlateBlue",                            
-                      indexLabel: "xmin: {x}",
-                      indexLabelFontSize: 12,
-                      dataPoints: this.colmindps
-                    },
-                    {
-                      type: "line",
-                      color: "DarkSlateBlue",
-                      indexLabel: "xmax: {x}",
-                      indexLabelFontSize: 12,  
-                      dataPoints: this.colmaxdps
-                    },
-                    {
-                      type: "line",
-                      color: "CornflowerBlue",
-                      indexLabel: "({x},{y})",
-                      indexLabelFontSize: 12,    
-                      dataPoints: this.linedps
-                    },
-                    {
-                      type: "line",
-                      color: "DimGray",
-                      indexLabel: "({x},{y})",
-                      indexLabelFontSize: 12,     
-                      dataPoints: this.clipdatadps
-                    },
-                    {
-                      type: "line",
-                      indexLabel: "({x},{y})",
-                      color: "FloralWhite", 
-                      indexLabelFontSize: 12,     
-                      dataPoints: this.finalclipdps
-                    },
-                    {
-                      type: "line",
-                      indexLabel: "({x},{y})",
-                      color: "DimGray", 
-                      indexLabelFontSize: 12,     
-                      dataPoints: this.clipdataenddps
-                    }
-                   ]
-             });     
-               
-      }
-       this.drawcanvas= function(){      
-            if((this.rowmaxdps.length & this.rowmindps.length & this.colmaxdps.length & this.colmindps.length) !=0)  {
-                
-                this.rowmindps.length =0;
-                this.rowmaxdps.length =0;
-                this.colmindps.length =0;
-                this.colmaxdps.length =0;
-            }
-            this.colmindps.push({x:this.xmin,y:0},{x:this.xmin,y:400});
-            this.colmaxdps.push({x:this.xmax,y:0},{x:this.xmax,y:400});
-            this.rowmindps.push({x:0,y:this.ymin},{x:400,y:this.ymin});
-            this.rowmaxdps.push({x:0,y:this.ymax},{x:400,y:this.ymax});  
-            
-                this.linedps.length = 0;
-                this.clipdatadps.length = 0;
-                this.cliplinedps.length = 0;
-                this.finalclipdps.length = 0;
-                this.clipdataenddps.length = 0;
-            
-           this.chart.render();     
-        }      
-      this.defaultwindow = function(){
-          document.getElementById("xmin").value = 100;
-          document.getElementById("ymin").value = 100;
-          document.getElementById("xmax").value = 300;
-          document.getElementById("ymax").value = 300;
-          this.xmin = parseInt(document.getElementById("xmin").value);
-          this.xmax = parseInt(document.getElementById("xmax").value);
-          this.ymin = parseInt(document.getElementById("ymin").value);
-          this.ymax = parseInt(document.getElementById("ymax").value);
-          
-          
-          this.initializechart();
-          this.drawcanvas();
-      }
-      
-      this.updatewindow = function(){
-                 console.log('update window');
-                 if(parseInt(document.getElementById("xmin").value) <= parseInt(document.getElementById("xmax").value) && parseInt(document.getElementById("ymin").value) <= parseInt(document.getElementById("ymax").value))
-                  {
-                      
-                      this.xmin = parseInt(document.getElementById("xmin").value);
-                      this.xmax = parseInt(document.getElementById("xmax").value);
-                      this.ymin = parseInt(document.getElementById("ymin").value);
-                      this.ymax = parseInt(document.getElementById("ymax").value);
-                       console.log('update window updated');
-                      console.log(this.xmin,this.ymin,this.xmax,this.ymax);
-                      this.drawcanvas();
-                      //location.reload();
-                      return true;
-                  }
-               return false;
-      }
-      
-      };
-      var intersectdata = function(start1,end1,type)
-      {
-          this.start = start1.slice();
-          this.end = end1.slice();
-          this.pointtype = type;
-          
-      };
-      
-      var Experiment = function(objwindow,start,end){
-            
-             this.startOpcode = null;
-             this.endOpcode = null;
-             this.resultstart = [];
-             this.resultend = [];
-             this.slope = 0;
-             this.sconst = 0;
-             this.intersections_list = [];
-             this.set_outcode =function(point)
-			 {
-				outcode = '';
-
-				x = point[0];
-				y = point[1];
-
-				if(y > objwindow.ymax)
-					outcode = outcode + '1';
-				else
-					outcode = outcode + '0';
-
-				if(y < objwindow.ymin)
-					outcode = outcode + '1';
-				else
-					outcode = outcode + '0';
-
-				if(x > objwindow.xmax)
-					outcode = outcode + '1';
-				else
-					outcode = outcode + '0';
-
-				if(x < objwindow.xmin)
-					outcode = outcode + '1';
-				else
-					outcode = outcode + '0';
-
-				return outcode;
-			 }
-             this.clippingRequired=function(){
-                if(this.startOpcode == '0000' && this.endOpcode == '0000' )
-                   {
-                       objwindow.cliplinedps.length=0;
-                       objwindow.cliplinedps.push({x:parseInt(this.resultstart[0]),y:parseInt(this.resultstart[1])},{x:parseInt(this.resultend[0]),y:parseInt(this.resultend[1])});
-                       return false;
-                   }
-                else if(((parseInt(this.startOpcode, 2) | parseInt(this.endOpcode,2)) != 15 ) &(parseInt(this.startOpcode, 2) & parseInt(this.endOpcode,2)) !=0 )
-                    {
-                        objwindow.clipdatadps.length =0;
-                        objwindow.clipdatadps.push({x:parseInt(this.resultstart[0]),y:parseInt(this.resultstart[1])},{x:parseInt(this.resultend[0]),y:parseInt(this.resultend[1])});
-                        return false;
-                    }
-                else
-                    return true;
-                
-            }
-            this.addintersectiondata = function(start,end,region)
-            {
-                this.intersections_list.push(new intersectdata(start.slice(),end.slice(),region))
-               // this.intersections_list.push([start,end]);
-            }
-            this.dolineclipping = function(inpoint,pointopcode,region){
-                
-                var intersectcord = [];
-                var point = [];
-                    point = inpoint;
-               // this.intersections_list.push([pointopcode,point]);
-                console.log("first"+this.intersections_list);
-                while(parseInt(pointopcode,2) != 0)
-                    {
-                       
-                         if(pointopcode.charAt(0) == '1')
-                               {
-                                console.log(parseInt(pointopcode,2));
-                                intersectcord.length =0;    
-                                intersectcord[0] = Math.ceil((objwindow.ymax - this.sconst)/this.slope);
-					            intersectcord[1] = objwindow.ymax;
-                                //this.intersections_list.push([{x:parse.int(point[0]),y:point[1]},{x:intersectcord[0],y:intersectcord[1]}]);
-                                this.addintersectiondata(point.slice(),intersectcord.slice(),region);
-                                console.log("ymax"+point,intersectcord,region);
-                                
-                                point = intersectcord.slice();
-                                pointopcode = this.set_outcode(point);   
-                               }
-                         if(pointopcode.charAt(1) == '1')
-                             {
-                                intersectcord.length =0;  
-                                intersectcord[0] = Math.ceil((objwindow.ymin - this.sconst)/this.slope);
-					            intersectcord[1] = objwindow.ymin;
-                                this.addintersectiondata(point.slice(),intersectcord.slice(),region);
-                                console.log("ymin"+point,intersectcord);
-                                point = intersectcord.slice();
-                          
-                                pointopcode = this.set_outcode(point);  
-                             }
-                        if(pointopcode.charAt(2) == '1')
-                            {
-                                intersectcord.length =0; 
-                                intersectcord[0] = objwindow.xmax;
-					            intersectcord[1] = Math.ceil((this.slope * objwindow.xmax + this.sconst));
-                                this.addintersectiondata(point.slice(),intersectcord.slice(),region);
-
-                                console.log("xmax"+point.slice(),intersectcord.slice());
-                                point = intersectcord.slice();
-                               
-                                pointopcode = this.set_outcode(point); 
-                            }
-                        if(pointopcode.charAt(3) == '1')
-                            {
-                                intersectcord.length =0; 
-                                intersectcord[0] = objwindow.xmin;
-					            intersectcord[1] = Math.ceil((this.slope * objwindow.xmin + this.sconst));
-                                this.addintersectiondata(point.slice(),intersectcord.slice(),region);
-                                console.log("xmin"+point,intersectcord);
-                                point = intersectcord.slice();
-                                
-                                pointopcode = this.set_outcode(point); 
-                            }
-                        
-                    }
-                            
-                      return  point.slice();
-                              
-            }
-            this.startExperiment = function(){
-                this.startOpcode = this.set_outcode(start);
-                this.endOpcode = this.set_outcode(end);
-                
-                this.resultstart = start;
-                this.resultend = end;
-                this.intersections_list.length =0;
-                objwindow.linedps.push({x:parseInt(start[0]),y:parseInt(start[1])},{x:parseInt(end[0]),y:parseInt(end[1])});
-                objwindow.chart.render();
-                console.log("drawnline");
-                if(this.clippingRequired())
-                    {
-                         this.slope = (end[1]-start[1])/(end[0]-start[0]);
-
-				         //find constant 'c' by substituting one of the end points for x and y
-				         this.sconst = start[1] - this.slope*start[0];
-                    
-                         console.log("slope :"+ this.slope);
-                         if(this.startOpcode == '0000')
-                          {
-                            this.resultend = this.dolineclipping(end,this.endOpcode,"end");
-                             objwindow.cliplinedps.length =0;  
-                             objwindow.cliplinedps.push({x:parseInt(start[0]),y:parseInt(start[1])},{x:parseInt(this.resultend[0]),y:parseInt(this.resultend[1])}); console.log("this.startOpcode is 0000");    
-                              
-                          }
-                          else if(this.endOpcode == '0000')
-                          {
-                            this.resultstart = this.dolineclipping(start,this.startOpcode,"start");
-                             objwindow.cliplinedps.length =0;    
-                            objwindow.cliplinedps.push({x:parseInt(this.resultstart[0]),y:parseInt(this.resultstart[1])},{x:parseInt(end[0]),y:parseInt(end[1])});   
-                            console.log("this.endOpcode is 0000");       
-                          }
-                          else
-                          {
-                            console.log("both are non 0000");  
-                            this.resultstart = this.dolineclipping(start.slice(),this.startOpcode,"start");
-                            this.resultend = this.dolineclipping(end.slice(),this.endOpcode,"end");
-                            objwindow.cliplinedps.length =0;  
-                            objwindow.cliplinedps.push({x:parseInt(this.resultstart[0]),y:parseInt(this.resultstart[1])},{x:parseInt(this.resultend[0]),y:parseInt(this.resultend[1])});  
-                         }
-                    }
-             console.log(this.intersections_list);
-            
-            }
-      };
-      var Iterator = function(items) {
-         this.index = 0;
-         this.items = items;
-         this.first = function() {
-            this.reset();
-            return this.next();
-          },
-         this.next = function() {
-            return this.items[this.index++];
-          },
-         this.hasNext= function() {
-            return this.index < this.items.length;
-          },
-         this.reset= function() {
-            this.index = 0;  
-         },
-         this.hasPrevious =function(){
-            if(index == 0) return false;
-             else
-               return true;         
-         }     
-         this.previous = function(){
-             this.index--;
-             return this.items[index];
-         }
-         };
-      window.onload = function () {
-                  
-          
-      }
   </script>
 </head>
  
@@ -372,59 +25,70 @@
   </div>         
   <br>
   <button id="Enter" style="width:150px;">Enter</button>       
-  <button id="Experiementval" style="display:none;">Start Experiment</button>
+  <button id="customexperiment" style="display:none;">Start Experiment</button>
   <button id="previous" style="display:none;">previous</button>    
   <button id="next" style="display:none">next</button>   
   <br>    
   <br>    
-  <button id="experiment" style="width:150px;">Start Experiment with default values</button>
+  <button id="defaultexperiment" style="width:150px;">Start Experiment with default values</button>
   <button id="back" style="display:none;">back</button>    
   <script>
       var objwindow = null;
       objwindow = new clipwindow();
       objwindow.defaultwindow();
       var lineiterator = null;
-      document.getElementById("experiment").addEventListener("click", function(){
+      
+      function hidefield(fieldid)
+      {
+       document.getElementById(fieldid).style.display ="none"   
+      }
+      
+      function displayfield(fieldid)
+      {
+        document.getElementById(fieldid).style.display = "block"
+        document.getElementById(fieldid).style.display = "inline-block";
+      }
+      function startlineiterator(objExperiment)
+      {
+          if(lineiterator != null)lineiterator = null;
+          if(objExperiment.intersections_list.length == 0)
+            {
+              objwindow.finalclipdps.length = 0;
+              objwindow.finalclipdps.push(objwindow.cliplinedps.pop());
+            }
+          else
+            {
+              lineiterator = new Iterator(objExperiment.intersections_list.slice());
+            }
+      }
+      
+      document.getElementById("defaultexperiment").addEventListener("click", function(){
               start = [10, 350];
               end = [350, 10];
-              var objExperiment = new Experiment(objwindow,start.slice(),end.slice());
-              objExperiment.startExperiment();
-              document.getElementById("experiment").style.display = "none";
-              document.getElementById("previous").style.display = "block";
-              document.getElementById("previous").style.display = "inline-block";
-              document.getElementById("next").style.display = "block";
-              document.getElementById("next").style.display = "inline-block";
-              document.getElementById("inputinformation").style.display = "none";
-              document.getElementById("back").style.display = "block";
-              document.getElementById("back").style.display = "inline-block";
-              document.getElementById("Enter").style.display = "none"; 
-              if(lineiterator != null)lineiterator = null;
-               console.log(objExperiment.intersections_list);
-             // lineiterator = new Iterator(objExperiment.intersections_list);
-               if(objExperiment.intersections_list.length == 0)
-                  {
-                      objwindow.finalclipdps.length = 0;
-                      objwindow.finalclipdps.push(objwindow.cliplinedps.pop());
-                      
-                      
-                  }
-                else{
-                    
-                    lineiterator = new Iterator(objExperiment.intersections_list.slice());
-                   }
+              
+              var objExperiment = new experimentLab(objwindow,start.slice(),end.slice());
+              objExperiment.startlineExperiment();
+              
+              hidefield("defaultexperiment");
+              hidefield("Enter");
+              hidefield("inputinformation");
+              displayfield("previous");
+              displayfield("next");
+              displayfield("back");
+              startlineiterator(objExperiment);    
+          
+              
          });
       
        
       document.getElementById("Enter").addEventListener("click",function(){
            if(objwindow.updatewindow())
                {  
-                   document.getElementById("Enter").style.display = "none"; 
-                   document.getElementById("Experiementval").style.display = "block";
-                   document.getElementById("Experiementval").style.display = "inline-block";
-                   
-                   document.getElementById("experiment").style.display = "none";
-                   document.getElementById("back").style.display = "block";
-                   document.getElementById("back").style.display = "inline-block";
+                   hidefield("Enter");
+                   hidefield("defaultexperiment");
+                   displayfield("customexperiment");
+                   displayfield("back");
+                  
                    document.getElementById('text_one').innerHTML = "Enter cordinates (x,y) of one end point of line";
                    document.getElementById('text_two').innerHTML = "Enter cordinates (x,y) of other end point of line"; 
                    document.getElementById("xmin").value = 10;
@@ -438,47 +102,31 @@
         });
         document.getElementById("back").addEventListener("click",function(){
             objwindow.defaultwindow();
-            document.getElementById("Experiementval").style.display = "none";
-            document.getElementById("Enter").style.display = "block";
-            document.getElementById("Enter").style.display = "inline-block";
+            hidefield("customexperiment");
+            hidefield("back");
+            hidefield("previous");
+            hidefield("next");
             
-            document.getElementById("back").style.display = "none";
-            document.getElementById("experiment").style.display = "block";
-            document.getElementById("experiment").style.display = "inline-block";
+            displayfield("Enter");
+            displayfield("defaultexperiment");
+            displayfield("inputinformation");
             document.getElementById('text_one').innerHTML = "Co-ordinates of bottom left corner";
             document.getElementById('text_two').innerHTML = "Co-ordinates of upper right corner";
-            document.getElementById("inputinformation").style.display ="block";
-            document.getElementById("previous").style.display = "none";
-            document.getElementById("next").style.display = "none";
             
         });
       
-      document.getElementById("Experiementval").addEventListener("click",function(){
+      document.getElementById("customexperiment").addEventListener("click",function(){
               start = [document.getElementById("xmin").value, document.getElementById("ymin").value];
               end = [document.getElementById("xmax").value, document.getElementById("ymax").value];
-              var objExperiment = new Experiment(objwindow,start,end);
-              objExperiment.startExperiment();
-              document.getElementById("Experiementval").style.display = "none";
-              document.getElementById("previous").style.display = "block";
-              document.getElementById("previous").style.display = "inline-block";
-              document.getElementById("next").style.display = "block";
-              document.getElementById("next").style.display = "inline-block";
-              document.getElementById("inputinformation").style.display = "none";
-              if(lineiterator != null)lineiterator = null;
-              console.log("experiment"+objExperiment.intersections_list);
-              if(objExperiment.intersections_list.length == 0)
-                  {
-                      if(objwindow.cliplinedps.length > 0)
-                          {
-                            objwindow.finalclipdps.length = 0;
-                            objwindow.finalclipdps.push(objwindow.cliplinedps.pop(),objwindow.cliplinedps.pop());
-                          }
-                      objwindow.chart.render();
-                  }
-                else{
-                    
-                    lineiterator = new Iterator(objExperiment.intersections_list);
-                   }
+              var objExperiment = new experimentLab(objwindow,start,end);
+              objExperiment.startlineExperiment();
+              
+              hidefield("customexperiment");
+              hidefield("inputinformation");
+              displayfield("previous");
+              displayfield("next");
+              startlineiterator(objExperiment);    
+                            
               
       });
       document.getElementById("previous").addEventListener("click",function(){
@@ -506,23 +154,17 @@
                 var data = [];
                 var start = [];
                 var end = []; 
-                
-                
-                console.log(lineiterator.index); 
-               
+          
                 if(lineiterator.hasNext())
                     {
-                   
-                      
-                    data = lineiterator.next();
-                    console.log(data);     
-                    start = data.start.slice();
-                    end = data.end.slice();  
-                        
-                    
-                    if(data.pointtype == "start")
+                      data = lineiterator.next();
+                      console.log(data);     
+                      start = data.start.slice();
+                      end = data.end.slice();  
+                                    
+                      if(data.pointtype == "start")
                          objwindow.clipdatadps.push({x:parseInt(start[0]),y:parseInt(start[1])},{x:parseInt(end[0]),y:parseInt(end[1])});    
-                     else
+                      else
                          objwindow.clipdataenddps.push({x:parseInt(start[0]),y:parseInt(start[1])},{x:parseInt(end[0]),y:parseInt(end[1])});
                         
                      
@@ -534,26 +176,15 @@
                       objwindow.clipdatadps.length=0;
                       objwindow.clipdataenddps.length = 0;    
                       data = lineiterator.reset();
-                    
                       objwindow.finalclipdps.length =0;     
-                      
                       objwindow.finalclipdps =objwindow.cliplinedps.slice();
-                      
-                         
-                         
-                                
                       objwindow.chart.render();    
                           
                      }
-                 //console.log("next"+ objwindow.clipdatadps);
-                 
+               
               }
              
-                 
-          
-          
-          
-      });
+        });
     </script>
     
 </body>

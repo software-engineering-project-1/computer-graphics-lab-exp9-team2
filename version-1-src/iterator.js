@@ -15,13 +15,12 @@ var Iterator = function(items) {
             this.index = 0;  
          },
          this.hasPrevious =function(){
-            if(this.index == 0) 
-                return false;
+            if(index == 0) return false;
              else
                return true;         
          }     
          this.previous = function(){
              this.index--;
-             return this.items[this.index];
+             return this.items[index];
          }
          };

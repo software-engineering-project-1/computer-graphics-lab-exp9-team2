@@ -1,0 +1,166 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="text/javascript" src="canvasjs.min.js"></script>
+  <script type="text/javascript" src="datalibrary.js"></script>    
+  <script type="text/javascript" src="canvasadapter.js"></script>
+  <script type="text/javascript" src="drawwindow.js"></script>
+  <script type="text/javascript" src="drawline.js"></script>
+  <script type="text/javascript" src="coherlineclipping.js"></script>
+  <script type="text/javascript" src="drawingfacade.js"></script>   
+  <script type="text/javascript" src="iterator.js"></script>
+  <script type="text/javascript">
+  </script>
+</head>
+ 
+<body>
+  <div id="chartContainer" style="height: 500px; width: 50%;"></div>
+  <div id="inputinformation">
+  <br>
+  <p id="text_one">Co-ordinates of bottom left corner</p>             
+  <input id="xmin" type="number" value = 100 >    
+  <input id="ymin" type="number" value = 100 >
+  <br>
+  <p id="text_two"> Co-ordinates of upper right  corner</p>
+  <input id="xmax" type="number" value = 300 >    
+  <input id="ymax" type="number" value = 300 >  
+  <br>
+  </div>         
+  <br>
+  <button id="Enter" style="width:150px;">Enter</button>       
+  <button id="customexperiment" style="display:none;">Start Experiment</button>
+  <button id="previous" style="display:none;">previous</button>    
+  <button id="next" style="display:none">next</button>   
+  <br>    
+  <br>    
+  <button id="defaultexperiment" style="width:150px;">Start Experiment with default values</button>
+  <button id="back" style="display:none;">back</button>    
+  <script>
+  
+      document.getElementById("xmin").value = 100;
+      document.getElementById("xmax").value = 300;
+      document.getElementById("ymin").value = 100;
+      document.getElementById("ymax").value = 300;
+      var regioncoords = new coordinates(100,100,300,300);
+      var pointcoords  = new coordinates(10,350,350,10);
+      var drawfacadeobj = new drawingFacade();
+      drawfacadeobj.initialze(GraphEnum.LINE);
+      drawfacadeobj.drawwindow(regioncoords);
+      
+      function hidefield(fieldid)
+      {
+       document.getElementById(fieldid).style.display ="none"   
+      }
+      
+      function displayfield(fieldid)
+      {
+        document.getElementById(fieldid).style.display = "block"
+        document.getElementById(fieldid).style.display = "inline-block";
+      }
+     
+      
+      document.getElementById("Enter").addEventListener("click",function(){
+             {  
+                   xmin = parseInt(document.getElementById("xmin").value);
+                   ymin = parseInt(document.getElementById("ymin").value);
+                   xmax = parseInt(document.getElementById("xmax").value);
+                   ymax = parseInt(document.getElementById("ymax").value);
+                   regioncoords.setvalues(xmin,ymin,xmax,ymax);
+                   if(drawfacadeobj.drawwindow(regioncoords))
+                       {
+                           hidefield("Enter");
+                           hidefield("defaultexperiment");
+                           displayfield("customexperiment");
+                           displayfield("back");
+
+                           document.getElementById('text_one').innerHTML = "Enter cordinates (x,y) of one end point of line";
+                           document.getElementById('text_two').innerHTML = "Enter cordinates (x,y) of other end point of line"; 
+                           document.getElementById("xmin").value = 10;
+                           document.getElementById("xmax").value = 350;
+                           document.getElementById("ymin").value = 350;
+                           document.getElementById("ymax").value = 10;
+                       }
+                 else
+                       {
+                           document.getElementById("xmin").value = 100;
+                           document.getElementById("xmax").value = 300;
+                           document.getElementById("ymin").value = 100;
+                           document.getElementById("ymax").value = 300;
+                       }
+                   
+   
+               }           
+                
+        });
+      
+      document.getElementById("defaultexperiment").addEventListener("click", function(){
+              
+            pointcoords.setvalues(10,350,350,10);
+            drawfacadeobj.drawline(pointcoords);  
+            drawfacadeobj.dolineclipping();
+            drawfacadeobj.startlineiterator();
+              hidefield("defaultexperiment");
+              hidefield("Enter");
+              hidefield("inputinformation");
+              displayfield("previous");
+              displayfield("next");
+              displayfield("back");
+              
+   
+         });
+      
+       document.getElementById("back").addEventListener("click",function(){
+           
+            regioncoords.setvalues(100,100,300,300);
+            document.getElementById("xmin").value = 100;
+            document.getElementById("xmax").value = 300;
+            document.getElementById("ymin").value = 100;
+            document.getElementById("ymax").value = 300;
+            drawfacadeobj.drawwindow(regioncoords);
+           
+            hidefield("customexperiment");
+            hidefield("back");
+            hidefield("previous");
+            hidefield("next");
+            
+            displayfield("Enter");
+            displayfield("defaultexperiment");
+            displayfield("inputinformation");
+            document.getElementById('text_one').innerHTML = "Co-ordinates of bottom left corner";
+            document.getElementById('text_two').innerHTML = "Co-ordinates of upper right corner";
+            
+        });
+      
+      document.getElementById("customexperiment").addEventListener("click",function(){
+              
+              xmin = parseInt(document.getElementById("xmin").value);
+              ymin = parseInt(document.getElementById("ymin").value);
+              xmax = parseInt(document.getElementById("xmax").value);
+              ymax = parseInt(document.getElementById("ymax").value);
+              pointcoords.setvalues(xmin,ymin,xmax,ymax);
+              drawfacadeobj.drawline(pointcoords);
+              drawfacadeobj.dolineclipping()
+              drawfacadeobj.startlineiterator();
+              
+              hidefield("customexperiment");
+              hidefield("inputinformation");
+              displayfield("previous");
+              displayfield("next");
+                 
+                            
+              
+      });
+
+      document.getElementById("next").addEventListener("click",function(){
+           drawfacadeobj.nextAction();
+
+        });
+      document.getElementById("previous").addEventListener("click",function(){
+          drawfacadeobj.previousAction();
+ 
+      });
+ 
+    </script>
+    
+</body>
+</html>
